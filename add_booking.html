@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Booking</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            background-color: #FFDBB5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin-top: 60px;
+            padding: 40px;
+            background-color: #ffe7ce;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            position: relative;
+        }
+        h3 {
+            margin-bottom: 30px;
+            color: #343a40;
+            text-align: center;
+            font-weight: 700;
+        }
+        .btn-secondary {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: 500;
+            color: #495057;
+        }
+        .form-control {
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            background-color: #fff8f1;
+        }
+        .btn-primary, .btn-danger {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 5px;
+        }
+        .btn-primary {
+            background-color: #88623e;
+        }
+        .btn-primary:hover {
+            background-color: #603F26;
+            border-color: #603F26;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+        /* Home button positioned at the top-left corner */
+        .home-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #A67B5B;
+        }
+
+        .home-btn:hover {
+            background-color: #6F4E37;
+        }
+    </style>
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4xF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Home Button -->
+        <a href="index.html" class="btn btn-secondary home-btn">Go To Home</a>
+        <h3>Add New Booking</h3>
+        <form id="booking-form">
+            <div class="form-group">
+                <label for="facilityDescription">Facility Description</label>
+                <input type="text" class="form-control" id="facilityDescription" placeholder="Enter facility description" required>
+            </div>
+            <div class="form-group">
+                <label for="bookingDateFrom">Booking Date From</label>
+                <input type="text" class="form-control" id="bookingDateFrom" placeholder="Enter start booking date" required>
+            </div>
+            <div class="form-group">
+                <label for="bookingDateTo">Booking Date To</label>
+                <input type="text" class="form-control" id="bookingDateTo" placeholder="Enter end booking date" required>
+            </div>
+            <div class="form-group">
+                <label for="bookedBy">Booked By</label>
+                <input type="text" class="form-control" id="bookedBy" placeholder="Enter your name" required>
+            </div>
+            <div class="form-group">
+                <label for="bookingStatus">Booking Status</label>
+                <select class="form-control" id="bookingStatus" required>
+                    <option value="" disabled selected>Select Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Booking</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById("booking-form").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent the default form submission
+    
+            var facilityDescription = document.getElementById("facilityDescription").value;
+            var bookingDateFrom = document.getElementById("bookingDateFrom").value;
+            var bookingDateTo = document.getElementById("bookingDateTo").value;
+            var bookedBy = document.getElementById("bookedBy").value;
+            var bookingStatus = document.getElementById("bookingStatus").value;
+    
+            console.log("Form values:", {
+                facilityDescription,
+                bookingDateFrom,
+                bookingDateTo,
+                bookedBy,
+                bookingStatus
+            });
+    
+            addBooking(facilityDescription, bookingDateFrom, bookingDateTo, bookedBy, bookingStatus);
+        });
+
+        function addBooking(facilityDescription, bookingDateFrom, bookingDateTo, bookedBy, bookingStatus) {
+            var controllerURL = "https://localhost:44391/api/Facility/post"; // Replace with your API endpoint
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", controllerURL, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('Authorization', 'Bearer '+ localStorage.getItem('authToken')); // Replace with your Bearer token
+    
+            var data = JSON.stringify({
+                facilityDescription: facilityDescription,
+                bookingDateFrom: bookingDateFrom,
+                bookingDateTo: bookingDateTo,
+                bookedBy: bookedBy,
+                bookingStatus: bookingStatus
+            });
+    
+            console.log("Sending data:", data);
+    
+            xhr.onreadystatechange = function() {
+                if (this.readyState === XMLHttpRequest.DONE) {
+                    if (this.status === 200 || this.status === 201) { // 201 status for successful creation
+                        console.log("Booking added successfully:", this.responseText);
+                        alert("Booking added successfully.");
+                        // Redirect to index.html after successfully adding the booking
+                        window.location.href = "index.html";
+                    } else {
+                        console.error("Error adding booking:", this.responseText);
+                        alert("Error adding booking: " + this.responseText);
+                    }
+                }
+            };
+    
+            xhr.send(data);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Booking</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    
+    <style>
+        body {
+            background-color: #DFD3C3; /* Light grey background */
+            font-family: Arial, sans-serif; /* Clean and modern font */
+        }
+
+        .container {
+            max-width: 700px;
+            margin-top: 50px;
+            padding: 30px;
+            background-color: #F8EDE3; /* White background for form */
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #B99470; /* Bootstrap primary color */
+        }
+
+        .form-group label {
+            font-weight: 500; /* Slightly bolder labels */
+            color: #333; /* Dark text color for readability */
+        }
+
+        .form-control {
+            border-radius: 5px;
+            border: 1px solid #ced4da; /* Bootstrap border color */
+            padding: 10px; /* Increase padding for better spacing */
+            background-color: #F7F7F8;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.1rem;
+            font-weight: 500; /* Slightly bolder text */
+            border-radius: 5px;
+            background-color: #B99470; /* Bootstrap primary color */
+            border: none; /* Remove default border */
+            transition: background-color 0.3s ease; /* Smooth transition effect */
+        }
+
+        .btn-primary:hover {
+            background-color: #8c6845; /* Darker shade on hover */
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .home-button {
+            background-color: #A28B55;
+        }
+
+        .home-button:hover {
+            background-color: #78673f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="btn btn-secondary home-button">Go To Home</a>
+        <h1 class="mt-5">Update Booking</h1>
+        <form id="updateBookingForm" class="mt-4">
+            <div class="form-group">
+                <label for="facilityDescription">Facility Description</label>
+                <input type="text" class="form-control" id="facilityDescription" placeholder="Enter facility description">
+            </div>
+            <div class="form-group">
+                <label for="bookingDateFrom">Booking Date From</label>
+                <input type="text" class="form-control" id="bookingDateFrom" placeholder="Enter start booking date">
+            </div>
+            <div class="form-group">
+                <label for="bookingDateTo">Booking Date To</label>
+                <input type="text" class="form-control" id="bookingDateTo" placeholder="Enter end booking date">
+            </div>
+            <div class="form-group">
+                <label for="bookedBy">Booked By</label>
+                <input type="text" class="form-control" id="bookedBy" placeholder="Enter your name">
+            </div>
+            <div class="form-group">
+                <label for="bookingStatus">Booking Status</label>
+                <select class="form-control" id="bookingStatus">
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="updateBooking()">Update Booking</button>
+        </form>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookingID = urlParams.get('id');
+        console.log("Booking ID:", bookingID);  // Add this to ensure bookingID is correct
+
+
+        function loadBookingDetails() {
+        const controllerURL = `https://localhost:44391/api/Facility/getbyid/${bookingID}`;
+        const xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState === 4 && this.status === 200) {
+                const bookingDetails = JSON.parse(this.responseText);
+                console.log("Booking Details:", bookingDetails);  // Add this to check response
+                document.getElementById('facilityDescription').value = bookingDetails.facilityDescription;
+                document.getElementById('bookingDateFrom').value = bookingDetails.bookingDateFrom;
+                document.getElementById('bookingDateTo').value = bookingDetails.bookingDateTo;
+                document.getElementById('bookedBy').value = bookingDetails.bookedBy;
+                document.getElementById('bookingStatus').value = bookingDetails.bookingStatus;
+            } else if (this.readyState === 4) {
+                console.error("Error loading booking details: " + this.responseText);
+            }
+        };
+
+        xhttp.open("GET", controllerURL, true);
+        xhttp.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('authToken'));
+        xhttp.send();
+    }
+
+
+        function updateBooking() {
+            const facilityDescription = document.getElementById('facilityDescription').value;
+            const bookingDateFrom = document.getElementById('bookingDateFrom').value;
+            const bookingDateTo = document.getElementById('bookingDateTo').value;
+            const bookedBy = document.getElementById('bookedBy').value;
+            const bookingStatus = document.getElementById('bookingStatus').value;
+
+            if (!facilityDescription || !bookingDateFrom || !bookingDateTo || !bookedBy) {
+                alert("Please fill out all required fields.");
+                return;
+            }
+
+            const controllerURL = `https://localhost:44391/api/Facility/put?id=${bookingID}`;
+            const xhr = new XMLHttpRequest();
+
+            xhr.open("PUT", controllerURL, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('authToken'));
+
+            const data = JSON.stringify({
+                "id": bookingID,
+                "facilityDescription": facilityDescription,
+                "bookingDateFrom": bookingDateFrom,
+                "bookingDateTo": bookingDateTo,
+                "bookedBy": bookedBy,
+                "bookingStatus": bookingStatus
+            });
+
+            xhr.onreadystatechange = function() {
+                if (this.readyState === 4) {
+                    if (this.status === 200) {
+                        console.log("Booking updated successfully:", this.responseText);
+                        alert("Booking updated successfully!");
+                        window.location.href = "index.html";
+                    } else {
+                        console.error("Error updating booking: " + this.responseText);
+                        alert("Error updating booking: " + this.responseText);
+                    }
+                }
+            };
+
+            console.log("Sending data:", data);
+            xhr.send(data);
+        }
+
+
+        window.onload = loadBookingDetails;
+    </script>
+</body>
+</html>

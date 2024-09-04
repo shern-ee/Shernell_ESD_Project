@@ -1,0 +1,376 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facility Booking</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6Hty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4xF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFF8E8;
+        }
+
+        .hero-image {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("https://www.shutterstock.com/image-photo/group-multi-ethnic-corporate-facilitys-260nw-1751378768.jpg");
+            height: 240px;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: relative;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .hero-image h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        footer {
+            background-color: #F7EED3;
+            padding: 10px 0;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        footer p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .search-box input,
+        .search-box select {
+            margin-right: 10px;
+        }
+
+        .btn-secondary {
+            background-color: #d0190e;
+        }
+
+        .btn-secondary:hover {
+            background-color: #a4140b;
+        }
+
+        .bookmark-btn {
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        .bookmark-btn i {
+            font-size: 1.2rem;
+            color: #ccc;
+        }
+
+        .bookmark-btn.bookmarked i {
+            color: #007bff; /* Blue color for bookmarked items */
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-image">
+        <h1>Facility Booking System</h1>
+    </div>
+
+    <div class="container">
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <div class="search-box">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by Facility Description">
+                    <select id="filterSelect" class="form-control">
+                        <option value="">Sort By</option>
+                        <option value="alphabetical">Alphabetical Order</option>
+                        <option value="datefrom">Date From</option>
+                        <option value="status">Status</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4 text-right">
+                <a href="add_booking.html"><button class="btn btn-primary">Add Booking</button></a>
+                <button class="btn btn-secondary ml-2" onclick="logout()">Logout</button>
+                <button class="btn btn-success ml-2" onclick="exportToCSV()">Export to CSV</button>
+            </div>
+        </div>
+        <div id="facility-table-container"></div>
+        <div id="pagination" class="text-center mt-3"></div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Facility Booking System. All Rights Reserved.</p>
+        </div>
+    </footer>
+    
+    <script>
+        let originalFacilityInfo = []; // To store the original data
+        let currentPage = 1;
+        const rowsPerPage = 5;
+        const bookmarkedFacilities = new Set(); // To keep track of bookmarked facilities
+        let sortOrder = ''; // To keep track of the current sort order
+
+        function generatefacilityTable(facilityInfo) {
+            // Apply sorting
+            const sortedInfo = sortData(facilityInfo);
+
+            // Prioritize bookmarked items by moving them to the top
+            const bookmarkedInfo = sortedInfo.filter(item => bookmarkedFacilities.has(item.bookingID));
+            const unbookmarkedInfo = sortedInfo.filter(item => !bookmarkedFacilities.has(item.bookingID));
+            const combinedInfo = [...bookmarkedInfo, ...unbookmarkedInfo];
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = combinedInfo.slice(start, end);
+
+            let tableHeading = 
+                `<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Facility Description</th>
+                            <th scope="col">Booking Date From</th>
+                            <th scope="col">Booking Date To</th>
+                            <th scope="col">Booked By</th>
+                            <th scope="col">Booking Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>   
+                    </thead>
+                    <tbody id="facility-table-body">`;
+
+            let tableEnding = `</tbody></table>`;
+
+            let tableInfoHTML = "";
+            for (let i = 0; i < paginatedData.length; i++) {
+                const isBookmarked = bookmarkedFacilities.has(paginatedData[i].bookingID);
+                tableInfoHTML += "<tr scope='row'>";
+                tableInfoHTML += "<td>" + paginatedData[i].facilityDescription + "</td>";
+                tableInfoHTML += "<td>" + paginatedData[i].bookingDateFrom + "</td>";
+                tableInfoHTML += "<td>" + paginatedData[i].bookingDateTo + "</td>";
+                tableInfoHTML += "<td>" + paginatedData[i].bookedBy + "</td>";
+                tableInfoHTML += "<td>" + paginatedData[i].bookingStatus + "</td>";
+                tableInfoHTML += `<td>
+                    <button class="btn btn-danger btn-sm" onclick="deletefacilityByID(${paginatedData[i].bookingID})">Delete</button>
+                    <button class="btn btn-warning btn-sm" onclick="updatefacilityByID(${paginatedData[i].bookingID})">Update</button>
+                    <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" onclick="toggleBookmark(${paginatedData[i].bookingID})">
+                        <i class="fas fa-star"></i>
+                    </button>
+                </td>`;
+                tableInfoHTML += "</tr>";
+            }
+
+            document.getElementById("facility-table-container").innerHTML = tableHeading + tableInfoHTML + tableEnding;
+            setupPagination(combinedInfo.length, rowsPerPage);
+        }
+
+        function setupPagination(totalRows, rowsPerPage) {
+            const totalPages = Math.ceil(totalRows / rowsPerPage);
+            let paginationHTML = "";
+
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHTML += `<button class="btn btn-sm btn-primary mx-1" onclick="changePage(${i})">${i}</button>`;
+            }
+
+            document.getElementById("pagination").innerHTML = paginationHTML;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            generatefacilityTable(originalFacilityInfo);
+        }
+
+        function filterTable(query) {
+            if (!query) {
+                // If the search query is empty, reset to the full list
+                loadFacilities();
+                return;
+            }
+
+            var controllerURL = `https://localhost:44391/api/Facility/search/search?description=${encodeURIComponent(query)}`;
+            var xhttp = new XMLHttpRequest();
+
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var facilityInfo = JSON.parse(xhttp.responseText);
+                    originalFacilityInfo = [...facilityInfo]; // Update the data with the search result
+                    generatefacilityTable(facilityInfo);
+                } else if (this.readyState == 4) {
+                    console.error("Error fetching facilities: " + xhttp.responseText);
+                    document.getElementById("facility-table-container").innerHTML = "<p>No facilities found.</p>";
+                }
+            };
+            xhttp.open("GET", controllerURL, true);
+            xhttp.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('authToken'));
+            xhttp.send();
+        }
+
+        document.getElementById("searchInput").addEventListener("input", function() {
+            const query = this.value;
+            filterTable(query);
+        });
+
+        document.getElementById("filterSelect").addEventListener("change", function() {
+            const orderBy = this.value;
+            sortTable(orderBy);
+        });
+
+        window.onload = loadFacilities;
+
+        function sortData(data) {
+            if (sortOrder === "alphabetical") {
+                return data.slice().sort((a, b) => a.facilityDescription.localeCompare(b.facilityDescription));
+            }
+            if (sortOrder === "datefrom") {
+                return data.slice().sort((a, b) => new Date(a.bookingDateFrom) - new Date(b.bookingDateFrom));
+            }
+            if (sortOrder === "status") {
+                return data.slice().sort((a, b) => a.bookingStatus.localeCompare(b.bookingStatus));
+            }
+            return data;
+        }
+
+        function sortTable(orderBy) {
+            sortOrder = orderBy; // Save the selected sort order
+            
+            // Call the sort controller
+            var controllerURL = `https://localhost:44391/api/Facility/sort/sort?orderBy=${encodeURIComponent(orderBy)}`;
+            var xhttp = new XMLHttpRequest();
+
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var sortedData = JSON.parse(xhttp.responseText);
+                    originalFacilityInfo = [...sortedData]; // Update the data with the sorted result
+                    generatefacilityTable(sortedData); // Render the sorted data
+                } else if (this.readyState == 4) {
+                    console.error("Error fetching sorted facilities: " + xhttp.responseText);
+                }
+            };
+            xhttp.open("GET", controllerURL, true);
+            xhttp.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('authToken'));
+            xhttp.send();
+        }
+
+
+
+        function deletefacilityByID(facilityID) {
+            let isSure = confirm("Are you sure you want to delete this facility?");
+            if (isSure) {
+                var controllerURL = "https://localhost:44391/api/Facility/delete?id=" + facilityID;
+                var xhr = new XMLHttpRequest();
+                xhr.open("DELETE", controllerURL, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('Authorization', 'Bearer '+ localStorage.getItem('authToken'));
+
+                var data = JSON.stringify({
+                    "id": 0,
+                    "facilityDescription": "string",
+                    "bookingDateFrom": "string",
+                    "bookingDateTo": "string",
+                    "bookedBy": "string",
+                    "bookingStatus": "string"
+                })
+
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        console.log("Facility deleted successfully.");
+                        loadFacilities(); // Reload the table after deletion
+                    } else if (this.readyState == 4) {
+                        console.error("Error deleting facility: " + xhr.responseText);
+                    }
+                };
+
+                xhr.send(data);
+            }
+        }
+
+        function updatefacilityByID(facilityID) {
+            window.location.href = `update_booking.html?id=${facilityID}`;
+        }
+
+        function loadFacilities() {
+            var controllerURL = "https://localhost:44391/api/Facility/getall";
+            var xhttp = new XMLHttpRequest();
+
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var facilityInfo = JSON.parse(xhttp.responseText);
+                    originalFacilityInfo = [...facilityInfo]; // Store original data
+                    generatefacilityTable(facilityInfo);
+                }
+            };
+            xhttp.open("GET", controllerURL, true);
+            xhttp.setRequestHeader('Authorization', 'Bearer '+ localStorage.getItem('authToken'));
+            xhttp.send();
+        }
+
+        function logout() {
+            let isConfirmed = confirm("Are you sure you want to log out?");
+            
+            if (isConfirmed) {
+                localStorage.removeItem('authToken');
+                window.location.href = 'login.html';
+            }
+        }
+
+        function exportToCSV() {
+            var controllerURL = "https://localhost:44391/api/Facility/ExportToCsv/export";
+            var xhr = new XMLHttpRequest();
+
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    const csvContent = this.responseText;
+                    const blob = new Blob([csvContent], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.setAttribute('hidden', '');
+                    a.setAttribute('href', url);
+                    a.setAttribute('download', 'facility_bookings.csv');
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                } else if (this.readyState == 4) {
+                    console.error("Error exporting CSV: " + xhr.responseText);
+                }
+            };
+
+            xhr.open("GET", controllerURL, true);
+            xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('authToken'));
+            xhr.send();
+        }
+
+
+        function toggleBookmark(facilityID) {
+            if (bookmarkedFacilities.has(facilityID)) {
+                bookmarkedFacilities.delete(facilityID);
+            } else {
+                bookmarkedFacilities.add(facilityID);
+            }
+            generatefacilityTable(originalFacilityInfo); // Refresh the table
+        }
+    </script>
+
+    <!-- Include Font Awesome for star icon -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+</body>
+</html>

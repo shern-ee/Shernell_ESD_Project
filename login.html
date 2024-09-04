@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(to right, #ff7e5f, #feb47b); /* Gradient background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .login-container {
+            max-width: 400px;
+            width: 100%;
+            padding: 30px;
+            background: #edf0f2;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            border-top: 5px solid #ff7e5f; /* Top border color */
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .login-header h3 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #ff7e5f; /* Header color */
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: #495057; /* Label color */
+        }
+
+        .form-control {
+            border-radius: 8px;
+            border: 2px solid #ced4da;
+            background-color: #fefeff;
+            font-size: 1rem;
+            color: #495057; /* Input text color */
+        }
+
+        .form-control:focus {
+            border-color: #ff7e5f;
+            box-shadow: 0 0 0 0.2rem rgba(255, 126, 95, 0.25);
+        }
+
+        .btn-primary {
+            background-color: #ff7e5f;
+            border-color: #ff7e5f;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+
+        .btn-primary:hover {
+            background-color: #feb47b;
+            border-color: #feb47b;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #ffae9a;
+            border-radius: 8px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #a9776b;
+            border-color: #a9776b;
+        }
+
+        .btn-block+.btn-block {
+            margin-top: 10px;
+        }
+
+        .btn-secondary {
+            background-color: #ffae9a;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h3>Login</h3>
+        </div>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Login</button>
+            <div class="mt-2">
+                <button type="button" class="btn btn-secondary btn-block" onclick="registerUser()">Register as User</button>
+                <button type="button" class="btn btn-secondary btn-block mt-2" onclick="registerAdmin()">Register as Admin</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById("login-form").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+
+            authenticateUser(username, password);
+        });
+
+        function authenticateUser(username, password) {
+            var controllerURL = "https://localhost:44391/api/Authenticate/login"; // Replace with your API endpoint
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", controllerURL, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+
+            var data = JSON.stringify({
+                username: username,
+                password: password,
+            });
+
+            xhr.onreadystatechange = function() {
+                if (this.readyState === XMLHttpRequest.DONE) {
+                    if (this.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        var token = response.token; // Assume the token is returned in the "token" field
+                        localStorage.setItem('authToken', token); // Store the token in localStorage
+                        console.log("Login successful.");
+                        alert("Login successful!");
+                        window.location.href = "index.html"; // Redirect to index.html
+                    } else {
+                        console.error("Error logging in: " + xhr.responseText);
+                        alert("Error logging in: " + xhr.responseText);
+                    }
+                }
+            };
+
+            xhr.send(data);
+        }
+
+        function registerUser() {
+            window.location.href = "register_user.html"; // Redirect to the user registration page
+        }
+
+        function registerAdmin() {
+            window.location.href = "register_admin.html"; // Redirect to the admin registration page
+        }
+    </script>
+</body>
+
+</html>
